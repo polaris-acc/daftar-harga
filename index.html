@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poster List Harga Voucher Kuota</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #0d1b2a;
+    padding: 12px;
+    padding-bottom: 90px; /* ruang untuk toolbar sticky */
+    min-height: 100vh;
+  }
+
+  /* ===== TOOLBAR ===== */
+  .toolbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(13,27,42,0.95);
+    backdrop-filter: blur(10px);
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+    border-top: 1px solid rgba(252,163,17,0.3);
+  }
+  .btn {
+    flex: 1;
+    background: #fca311;
+    color: #0d1b2a;
+    border: none;
+    padding: 14px 12px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: 0.2s;
+    box-shadow: 0 4px 10px rgba(252,163,17,0.3);
+    touch-action: manipulation;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn.secondary {
+    background: #4ade80;
+    box-shadow: 0 4px 10px rgba(74,222,128,0.3);
+  }
+  .btn:disabled { opacity: 0.6; cursor: wait; }
+
+  /* ===== POSTER ===== */
+  .poster {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
+    border: 3px solid #fca311;
+    border-radius: 16px;
+    padding: 18px;
+    color: #fff;
+    box-shadow: 0 0 30px rgba(252,163,17,0.25);
+  }
+  .header {
+    text-align: center;
+    border-bottom: 3px dashed #fca311;
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+  }
+  .header h1 {
+    font-size: 22px;
+    color: #fca311;
+    letter-spacing: 1.5px;
+    text-shadow: 2px 2px 0 #000;
+    line-height: 1.2;
+  }
+  .header p {
+    font-size: 11px;
+    color: #ccc;
+    margin-top: 5px;
+    letter-spacing: 2px;
+  }
+
+  .dua-kolom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .kolom {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .provider {
+    background: rgba(255,255,255,0.05);
+    border-left: 4px solid #fca311;
+    border-radius: 8px;
+    padding: 10px;
+  }
+  .provider h2 {
+    font-size: 13px;
+    color: #fca311;
+    margin-bottom: 8px;
+    text-align: center;
+    background: rgba(252,163,17,0.15);
+    padding: 6px;
+    border-radius: 5px;
+    letter-spacing: 1px;
+  }
+  .item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 6px;
+    font-size: 12px;
+    border-bottom: 1px dotted rgba(255,255,255,0.15);
+    gap: 6px;
+  }
+  .item:last-child { border-bottom: none; }
+  .item .nama { color: #e0e0e0; flex: 1; }
+  .item .nama b { color: #fff; }
+  .item .harga { color: #4ade80; font-weight: bold; white-space: nowrap; }
+
+  .footer {
+    text-align: center;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 3px dashed #fca311;
+    font-size: 11px;
+    color: #fca311;
+    letter-spacing: 1px;
+  }
+
+  /* ===== NOTIF ===== */
+  .notif {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(50px);
+    background: #4ade80;
+    color: #0d1b2a;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    opacity: 0;
+    transition: 0.4s;
+    z-index: 999;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .notif.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  /* ===== HP: 1 KOLOM ===== */
+  @media (max-width: 700px) {
+    .poster { padding: 14px; border-width: 2px; }
+    .dua-kolom { grid-template-columns: 1fr; gap: 12px; }
+    .header h1 { font-size: 20px; }
+    .provider h2 { font-size: 13px; }
+    .item { font-size: 12px; }
+    .btn { font-size: 13px; padding: 14px 8px; }
+  }
+
+  /* ===== PRINT ===== */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .toolbar, .notif { display: none !important; }
+    .poster {
+      box-shadow: none;
+      border-color: #000;
+      background: #fff;
+      color: #000;
+      max-width: 100%;
+    }
+    .header h1 { color: #000; text-shadow: none; }
+    .header p { color: #333; }
+    .provider { background: #f5f5f5; border-left-color: #000; }
+    .provider h2 { color: #000; background: #e0e0e0; }
+    .item .nama, .item .nama b { color: #000; }
+    .item .harga { color: #000; }
+    .footer { color: #000; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button class="btn secondary" onclick="downloadImage()" id="btnDownload">📥 SIMPAN GAMBAR</button>
+  <button class="btn" onclick="window.print()">🖨️ PRINT/PDF</button>
+</div>
+
+<div class="poster" id="poster">
+  <div class="header">
+    <h1>LIST HARGA VOUCHER</h1>
+    <p>KUOTA INTERNET ALL PROVIDER</p>
+  </div>
+
+  <div class="dua-kolom">
+    <!-- KOLOM KIRI -->
+    <div class="kolom">
+      <div class="provider">
+        <h2>TELKOMSEL</h2>
+        <div class="item"><span class="nama"><b>7GB</b> (1 Hari)</span><span class="harga">Rp 8.100</span></div>
+        <div class="item"><span class="nama"><b>7GB</b> (2 Hari)</span><span class="harga">Rp 10.800</span></div>
+        <div class="item"><span class="nama"><b>7GB</b> (3 Hari)</span><span class="harga">Rp 13.100</span></div>
+        <div class="item"><span class="nama"><b>7GB</b> (5 Hari)</span><span class="harga">Rp 15.200</span></div>
+        <div class="item"><span class="nama"><b>11GB</b> (7 Hari)</span><span class="harga">Rp 28.000</span></div>
+        <div class="item"><span class="nama"><b>By.U 9GB</b> (3 Hari)</span><span class="harga">Rp 13.000</span></div>
+        <div class="item"><span class="nama"><b>By.U 10GB</b> (5 Hari)</span><span class="harga">Rp 14.500</span></div>
+      </div>
+
+      <div class="provider">
+        <h2>3 (TRI)</h2>
+        <div class="item"><span class="nama"><b>6GB</b> (1 Hari)</span><span class="harga">Rp 8.500</span></div>
+        <div class="item"><span class="nama"><b>5GB</b> (3 Hari)</span><span class="harga">Rp 13.200</span></div>
+        <div class="item"><span class="nama"><b>10GB</b> (5 Hari)</span><span class="harga">Rp 17.800</span></div>
+        <div class="item"><span class="nama"><b>12GB</b> (5 Hari)</span><span class="harga">Rp 20.300</span></div>
+        <div class="item"><span class="nama"><b>15GB</b> (7 Hari)</span><span class="harga">Rp 23.300</span></div>
+        <div class="item"><span class="nama"><b>10GB</b> (28 Hari)</span><span class="harga">Rp 37.300</span></div>
+        <div class="item"><span class="nama"><b>42GB</b> (28 Hari)</span><span class="harga">Rp 84.500</span></div>
+        <div class="item"><span class="nama"><b>AON 8GB</b></span><span class="harga">Rp 32.300</span></div>
+      </div>
+
+      <div class="provider">
+        <h2>AXIS</h2>
+        <div class="item"><span class="nama"><b>6GB</b> (1 Hari)</span><span class="harga">Rp 7.500</span></div>
+        <div class="item"><span class="nama"><b>7GB</b> (2 Hari)</span><span class="harga">Rp 10.300</span></div>
+        <div class="item"><span class="nama"><b>5GB</b> (3 Hari)</span><span class="harga">Rp 12.200</span></div>
+        <div class="item"><span class="nama"><b>13GB</b> (3 Hari)</span><span class="harga">Rp 16.200</span></div>
+        <div class="item"><span class="nama"><b>5GB</b> (5 Hari)</span><span class="harga">Rp 14.100</span></div>
+        <div class="item"><span class="nama"><b>6GB</b> (5 Hari)</span><span class="harga">Rp 14.700</span></div>
+        <div class="item"><span class="nama"><b>17GB</b> (5 Hari)</span><span class="harga">Rp 23.200</span></div>
+        <div class="item"><span class="nama"><b>25GB</b> (5 Hari)</span><span class="harga">Rp 26.500</span></div>
+        <div class="item"><span class="nama"><b>10GB</b> (7 Hari)</span><span class="harga">Rp 24.200</span></div>
+        <div class="item"><span class="nama"><b>23GB</b> (7 Hari)</span><span class="harga">Rp 31.000</span></div>
+        <div class="item"><span class="nama"><b>12GB</b> (15 Hari)</span><span class="harga">Rp 32.800</span></div>
+        <div class="item"><span class="nama"><b>25GB</b> (15 Hari)</span><span class="harga">Rp 46.000</span></div>
+        <div class="item"><span class="nama"><b>35GB</b> (15 Hari)</span><span class="harga">Rp 69.500</span></div>
+        <div class="item"><span class="nama"><b>7GB</b> (30 Hari)</span><span class="harga">Rp 33.600</span></div>
+        <div class="item"><span class="nama"><b>16GB</b> (30 Hari)</span><span class="harga">Rp 59.000</span></div>
+        <div class="item"><span class="nama"><b>26GB</b> (30 Hari)</span><span class="harga">Rp 68.000</span></div>
+        <div class="item"><span class="nama"><b>40GB</b> (30 Hari)</span><span class="harga">Rp 79.500</span></div>
+      </div>
+    </div>
+
+    <!-- KOLOM KANAN -->
+    <div class="kolom">
+      <div class="provider">
+        <h2>INDOSAT (IM3)</h2>
+        <div class="item"><span class="nama"><b>4GB</b> (5 Hari)</span><span class="harga">Rp 13.500</span></div>
+        <div class="item"><span class="nama"><b>9GB</b> (5 Hari)</span><span class="harga">Rp 18.000</span></div>
+        <div class="item"><span class="nama"><b>9GB</b> (7 Hari)</span><span class="harga">Rp 23.500</span></div>
+      </div>
+
+      <div class="provider">
+        <h2>XL</h2>
+        <div class="item"><span class="nama"><b>4GB</b> (3 Hari)</span><span class="harga">Rp 12.300</span></div>
+        <div class="item"><span class="nama"><b>6GB</b> (7 Hari)</span><span class="harga">Rp 18.600</span></div>
+        <div class="item"><span class="nama"><b>10GB</b> (7 Hari)</span><span class="harga">Rp 23.600</span></div>
+        <div class="item"><span class="nama"><b>16GB</b> (7 Hari)</span><span class="harga">Rp 28.600</span></div>
+        <div class="item"><span class="nama"><b>7GB</b> (30 Hari)</span><span class="harga">Rp 33.700</span></div>
+        <div class="item"><span class="nama"><b>16GB</b> (30 Hari)</span><span class="harga">Rp 46.000</span></div>
+        <div class="item"><span class="nama"><b>20GB</b> (30 Hari)</span><span class="harga">Rp 55.000</span></div>
+        <div class="item"><span class="nama"><b>35GB</b> (30 Hari)</span><span class="harga">Rp 72.500</span></div>
+      </div>
+
+      <div class="provider">
+        <h2>SMARTFREN</h2>
+        <div class="item"><span class="nama"><b>4GB FULL</b> (3 Hari)</span><span class="harga">Rp 10.500</span></div>
+        <div class="item"><span class="nama"><b>6GB FULL</b> (7 Hari)</span><span class="harga">Rp 16.000</span></div>
+        <div class="item"><span class="nama"><b>Unlimited 1GB</b> (7 Hari)</span><span class="harga">Rp 17.500</span></div>
+        <div class="item"><span class="nama"><b>Unlimited 2GB</b> (7 Hari)</span><span class="harga">Rp 23.200</span></div>
+        <div class="item"><span class="nama"><b>4GB FULL</b> (14 Hari)</span><span class="harga">Rp 19.500</span></div>
+        <div class="item"><span class="nama"><b>7GB FULL</b> (28 Hari)</span><span class="harga">Rp 34.000</span></div>
+        <div class="item"><span class="nama"><b>Unlimited 1GB</b></span><span class="harga">Rp 62.000</span></div>
+        <div class="item"><span class="nama"><b>Unlimited 2GB</b></span><span class="harga">Rp 87.500</span></div>
+      </div>
+
+      <div class="provider">
+        <h2>KARTU PERDANA 3GB</h2>
+        <div class="item"><span class="nama"><b>Telkomsel 3GB</b></span><span class="harga">Rp 30.000</span></div>
+        <div class="item"><span class="nama"><b>By.U 3GB</b></span><span class="harga">Rp 22.000</span></div>
+        <div class="item"><span class="nama"><b>Indosat 3GB</b></span><span class="harga">Rp 18.000</span></div>
+        <div class="item"><span class="nama"><b>Tri Happy 3GB</b></span><span class="harga">Rp 18.000</span></div>
+        <div class="item"><span class="nama"><b>AXIS 3GB</b></span><span class="harga">Rp 18.000</span></div>
+        <div class="item"><span class="nama"><b>XL 3GB</b></span><span class="harga">Rp 18.000</span></div>
+        <div class="item"><span class="nama"><b>Smartfren 3GB</b></span><span class="harga">Rp 18.000</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">HARGA DAPAT BERUBAH SEWAKTU-WAKTU</div>
+</div>
+
+<div class="notif" id="notif">✅ Gambar berhasil diunduh!</div>
+
+<script>
+function downloadImage() {
+  const poster = document.getElementById('poster');
+  const btn = document.getElementById('btnDownload');
+  const originalText = btn.textContent;
+
+  btn.textContent = '⏳ MEMPROSES...';
+  btn.disabled = true;
+
+  // Menggunakan windowWidth untuk memaksa layout desktop (2 kolom) saat dirender
+  html2canvas(poster, {
+    scale: 4,            // Resolusi tinggi
+    windowWidth: 1024,   // Memaksa viewport desktop agar CSS media query mobile tidak aktif
+    backgroundColor: '#0d1b2a',
+    useCORS: true,
+    logging: false,
+    imageTimeout: 15000
+  }).then(canvas => {
+    const tanggal = new Date().toISOString().slice(0, 10);
+    const filename = 'poster-harga-' + tanggal + '.png';
+
+    if (canvas.toBlob) {
+      canvas.toBlob(blob => {
+        if (!blob) {
+          fallbackDownload(canvas, filename);
+          return finish(btn, originalText);
+        }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        finish(btn, originalText);
+      }, 'image/png');
+    } else {
+      fallbackDownload(canvas, filename);
+      finish(btn, originalText);
+    }
+  }).catch(err => {
+    console.error(err);
+    alert('Gagal menyimpan gambar: ' + err.message + '\n\nCoba gunakan browser Chrome/Safari terbaru.');
+    finish(btn, originalText);
+  });
+}
+
+function fallbackDownload(canvas, filename) {
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function finish(btn, originalText) {
+  btn.textContent = originalText;
+  btn.disabled = false;
+  const notif = document.getElementById('notif');
+  notif.classList.add('show');
+  setTimeout(() => notif.classList.remove('show'), 2500);
+}
+</script>
+
+</body>
+</html>
